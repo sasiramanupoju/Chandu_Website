@@ -5,29 +5,162 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Prostho Prep</title>
     <style>
-        :root { --primary: #ff8fab; --secondary: #fb6f92; --bg: #ffe5ec; --text: #4a4e69; --success: #4caf50; --danger: #ff4d4d; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, var(--bg), #ffc2d1); color: var(--text); margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        .container { background: white; border-radius: 25px; padding: 30px; max-width: 500px; width: 100%; box-shadow: 0 10px 30px rgba(251, 111, 146, 0.2); text-align: center; animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
-        @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .streak-badge { background: var(--primary); color: white; padding: 8px 15px; border-radius: 20px; font-weight: bold; font-size: 0.9em; animation: bounce 2s infinite; }
-        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+        :root { 
+            --primary: #ff8fab; 
+            --secondary: #fb6f92; 
+            --bg: #ffe5ec; 
+            --text: #4a4e69; 
+            --active-bg: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+            --missed-bg: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+        }
         
-        .weekly-track { display: flex; justify-content: space-between; margin-bottom: 25px; background: var(--bg); padding: 10px; border-radius: 15px; }
-        .day { display: flex; flex-direction: column; align-items: center; font-size: 0.75em; font-weight: bold; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: linear-gradient(135deg, var(--bg), #ffc2d1); 
+            color: var(--text); 
+            margin: 0; 
+            padding: 20px; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+        }
         
-        /* Updated Tracker Circles */
-        .circle { width: 30px; height: 30px; border-radius: 50%; margin-top: 5px; transition: 0.3s; background: white; border: 2px solid #ccc;}
-        .circle.active { background: var(--success); border-color: var(--success); transform: scale(1.1); box-shadow: 0 0 10px rgba(76, 175, 80, 0.4); }
-        .circle.missed { background: var(--danger); border-color: var(--danger); opacity: 0.9; }
+        .container { 
+            background: white; 
+            border-radius: 25px; 
+            padding: 30px; 
+            max-width: 500px; 
+            width: 100%; 
+            box-shadow: 0 10px 30px rgba(251, 111, 146, 0.2); 
+            text-align: center; 
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1); 
+        }
         
-        .question-box { background: #f8f9fa; padding: 20px; border-radius: 15px; font-size: 1.1em; margin-bottom: 20px; border-left: 5px solid var(--primary); }
-        textarea { width: 90%; height: 100px; border-radius: 15px; border: 2px solid #e9ecef; padding: 15px; font-family: inherit; resize: none; transition: 0.3s; }
+        @keyframes slideUp { 
+            from { transform: translateY(30px); opacity: 0; } 
+            to { transform: translateY(0); opacity: 1; } 
+        }
+        
+        .header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 25px; 
+        }
+        
+        .streak-badge { 
+            background: var(--primary); 
+            color: white; 
+            padding: 8px 15px; 
+            border-radius: 20px; 
+            font-weight: bold; 
+            font-size: 0.9em; 
+            animation: bounce 2s infinite; 
+            box-shadow: 0 4px 10px rgba(255, 143, 171, 0.4);
+        }
+        
+        @keyframes bounce { 
+            0%, 100% { transform: translateY(0); } 
+            50% { transform: translateY(-5px); } 
+        }
+        
+        /* --- Gorgeous New 7-Day Tracker --- */
+        .weekly-track { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            margin-bottom: 30px; 
+            background: #fff0f3; 
+            padding: 15px 10px; 
+            border-radius: 20px; 
+            box-shadow: inset 0 2px 8px rgba(251, 111, 146, 0.1);
+            gap: 8px;
+        }
+        
+        .day { 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            font-size: 0.85em; 
+            font-weight: bold; 
+            color: #b0b3c6; 
+            background: white;
+            padding: 10px 5px; 
+            border-radius: 15px; 
+            flex: 1;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+        }
+        
+        .day.active { 
+            background: var(--active-bg);
+            color: #1a535c;
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 8px 15px rgba(132, 250, 176, 0.4);
+        }
+        
+        .day.missed { 
+            background: var(--missed-bg);
+            color: #d62828;
+            opacity: 0.85;
+        }
+        
+        .day-icon {
+            font-size: 1.3em;
+            margin-top: 6px;
+        }
+        
+        /* Mobile Responsiveness for Tracker */
+        @media (max-width: 450px) {
+            .container { padding: 20px 15px; }
+            .weekly-track { padding: 12px 5px; gap: 4px; }
+            .day { font-size: 0.7em; padding: 8px 2px; border-radius: 12px; }
+            .day-icon { font-size: 1.1em; }
+            .day.active { transform: translateY(-3px) scale(1.02); box-shadow: 0 5px 10px rgba(132, 250, 176, 0.3); }
+        }
+        
+        /* --- Rest of the UI --- */
+        .question-box { 
+            background: #f8f9fa; 
+            padding: 20px; 
+            border-radius: 15px; 
+            font-size: 1.1em; 
+            margin-bottom: 20px; 
+            border-left: 5px solid var(--primary); 
+        }
+        
+        textarea { 
+            width: 100%; 
+            height: 100px; 
+            border-radius: 15px; 
+            border: 2px solid #e9ecef; 
+            padding: 15px; 
+            font-family: inherit; 
+            resize: none; 
+            transition: 0.3s; 
+            box-sizing: border-box;
+        }
+        
         textarea:focus { outline: none; border-color: var(--primary); }
+        
         .buttons { display: flex; gap: 10px; margin-top: 20px; margin-bottom: 20px; }
-        button, .btn-link { flex: 1; padding: 12px; border: none; border-radius: 15px; font-weight: bold; cursor: pointer; transition: 0.2s; text-decoration: none; display: block; box-sizing: border-box;}
+        
+        button, .btn-link { 
+            flex: 1; 
+            padding: 12px; 
+            border: none; 
+            border-radius: 15px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            transition: 0.2s; 
+            text-decoration: none; 
+            display: block; 
+            box-sizing: border-box;
+        }
+        
         button:active, .btn-link:active { transform: scale(0.95); }
-        .btn-submit { background: var(--secondary); color: white; }
+        .btn-submit { background: var(--secondary); color: white; box-shadow: 0 4px 10px rgba(251, 111, 146, 0.3); }
         .btn-random { background: #e9ecef; color: var(--text); }
         .btn-history { background: white; color: var(--secondary); border: 2px solid var(--secondary); width: 100%; }
         .btn-history:hover { background: var(--secondary); color: white; }
@@ -37,12 +170,15 @@
 
 <div class="container">
     <div class="header">
-        <h2>🦷 Chandu Prep</h2>
+        <h2>🦷 Prostho Prep</h2>
         <div class="streak-badge">🔥 <span id="streakPoints">0</span> pts</div>
     </div>
+    
     <div class="weekly-track" id="weeklyTrack"></div>
+    
     <div class="question-box" id="questionBox">Loading your question...</div>
     <textarea id="answerInput" placeholder="Type your answer here..."></textarea>
+    
     <div class="buttons">
         <button class="btn-random" onclick="fetchQuestion()">🎲 Skip</button>
         <button class="btn-submit" onclick="submitAnswer()">✨ Submit</button>
@@ -56,13 +192,14 @@
     async function fetchStats() {
         const res = await fetch('/api/stats');
         const data = await res.json();
+        
         document.getElementById('streakPoints').innerText = data.points;
         
-        // Maps the real past 7 days into the UI
+        // Dynamic mapping of the pill cards using emojis for active/missed states
         document.getElementById('weeklyTrack').innerHTML = data.past7Days.map(day => `
-            <div class="day">
-                ${day.day}
-                <div class="circle ${day.active ? 'active' : 'missed'}"></div>
+            <div class="day ${day.active ? 'active' : 'missed'}">
+                <span>${day.day}</span>
+                <span class="day-icon">${day.active ? '🔥' : '💤'}</span>
             </div>
         `).join('');
     }
@@ -73,6 +210,7 @@
         document.getElementById('questionBox').innerText = data.question_text;
         currentQuestionId = data.id;
         document.getElementById('answerInput').value = '';
+        
         const inputsDisabled = data.id === null;
         document.getElementById('answerInput').disabled = inputsDisabled;
         document.querySelector('.btn-submit').disabled = inputsDisabled;

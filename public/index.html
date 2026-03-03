@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prostho Prep</title>
+    <style>
+        :root { --primary: #ff8fab; --secondary: #fb6f92; --bg: #ffe5ec; --text: #4a4e69; --success: #4caf50; --danger: #ff4d4d; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, var(--bg), #ffc2d1); color: var(--text); margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .container { background: white; border-radius: 25px; padding: 30px; max-width: 500px; width: 100%; box-shadow: 0 10px 30px rgba(251, 111, 146, 0.2); text-align: center; animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .streak-badge { background: var(--primary); color: white; padding: 8px 15px; border-radius: 20px; font-weight: bold; font-size: 0.9em; animation: bounce 2s infinite; }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+        
+        .weekly-track { display: flex; justify-content: space-between; margin-bottom: 25px; background: var(--bg); padding: 10px; border-radius: 15px; }
+        .day { display: flex; flex-direction: column; align-items: center; font-size: 0.75em; font-weight: bold; }
+        
+        /* Updated Tracker Circles */
+        .circle { width: 30px; height: 30px; border-radius: 50%; margin-top: 5px; transition: 0.3s; background: white; border: 2px solid #ccc;}
+        .circle.active { background: var(--success); border-color: var(--success); transform: scale(1.1); box-shadow: 0 0 10px rgba(76, 175, 80, 0.4); }
+        .circle.missed { background: var(--danger); border-color: var(--danger); opacity: 0.9; }
+        
+        .question-box { background: #f8f9fa; padding: 20px; border-radius: 15px; font-size: 1.1em; margin-bottom: 20px; border-left: 5px solid var(--primary); }
+        textarea { width: 90%; height: 100px; border-radius: 15px; border: 2px solid #e9ecef; padding: 15px; font-family: inherit; resize: none; transition: 0.3s; }
+        textarea:focus { outline: none; border-color: var(--primary); }
+        .buttons { display: flex; gap: 10px; margin-top: 20px; margin-bottom: 20px; }
+        button, .btn-link { flex: 1; padding: 12px; border: none; border-radius: 15px; font-weight: bold; cursor: pointer; transition: 0.2s; text-decoration: none; display: block; box-sizing: border-box;}
+        button:active, .btn-link:active { transform: scale(0.95); }
+        .btn-submit { background: var(--secondary); color: white; }
+        .btn-random { background: #e9ecef; color: var(--text); }
+        .btn-history { background: white; color: var(--secondary); border: 2px solid var(--secondary); width: 100%; }
+        .btn-history:hover { background: var(--secondary); color: white; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h2>🦷 Prostho Prep</h2>
+        <div class="streak-badge">🔥 <span id="streakPoints">0</span> pts</div>
+    </div>
+    <div class="weekly-track" id="weeklyTrack"></div>
+    <div class="question-box" id="questionBox">Loading your question...</div>
+    <textarea id="answerInput" placeholder="Type your answer here..."></textarea>
+    <div class="buttons">
+        <button class="btn-random" onclick="fetchQuestion()">🎲 Skip</button>
+        <button class="btn-submit" onclick="submitAnswer()">✨ Submit</button>
+    </div>
+    <a href="/viewanswers.html" class="btn-link btn-history">📜 View Past Answers</a>
+</div>
+
+<script>
+    let currentQuestionId = null;
+
+    async function fetchStats() {
+        const res = await fetch('/api/stats');
+        const data = await res.json();
+        document.getElementById('streakPoints').innerText = data.points;
+        
+        // Maps the real past 7 days into the UI
+        document.getElementById('weeklyTrack').innerHTML = data.past7Days.map(day => `
+            <div class="day">
+                ${day.day}
+                <div class="circle ${day.active ? 'active' : 'missed'}"></div>
+            </div>
+        `).join('');
+    }
+
+    async function fetchQuestion() {
+        const res = await fetch('/api/question/random');
+        const data = await res.json();
+        document.getElementById('questionBox').innerText = data.question_text;
+        currentQuestionId = data.id;
+        document.getElementById('answerInput').value = '';
+        const inputsDisabled = data.id === null;
+        document.getElementById('answerInput').disabled = inputsDisabled;
+        document.querySelector('.btn-submit').disabled = inputsDisabled;
+        document.querySelector('.btn-submit').style.opacity = inputsDisabled ? '0.5' : '1';
+    }
+
+    async function submitAnswer() {
+        if(!currentQuestionId) return;
+        const text = document.getElementById('answerInput').value;
+        if(!text.trim()) return alert("Please type an answer first!");
+        
+        await fetch('/api/answer', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ questionId: currentQuestionId, answerText: text })
+        });
+        
+        alert("Awesome job! +10 Points added to your streak.");
+        fetchStats();
+        fetchQuestion();
+    }
+
+    fetchStats();
+    fetchQuestion();
+</script>
+</body>
+</html>

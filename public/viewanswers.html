@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study History</title>
+    <style>
+        :root { --primary: #ff8fab; --secondary: #fb6f92; --bg: #ffe5ec; --text: #4a4e69; --danger: #ff4d4d; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, var(--bg), #ffc2d1); color: var(--text); margin: 0; padding: 20px; }
+        .container { background: white; border-radius: 25px; padding: 30px; max-width: 600px; margin: 0 auto; box-shadow: 0 10px 30px rgba(251, 111, 146, 0.2); animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;}
+        h2 { margin: 0; }
+        .back-btn { background: var(--secondary); color: white; padding: 10px 20px; border-radius: 15px; text-decoration: none; font-weight: bold; transition: 0.2s; }
+        .back-btn:hover { transform: scale(0.95); }
+        
+        .history-item { background: #f8f9fa; padding: 20px; border-radius: 15px; margin-bottom: 20px; border-left: 5px solid var(--primary); position: relative; }
+        .history-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; flex-wrap: wrap; gap: 10px;}
+        .history-date { font-size: 0.85em; color: #888; font-weight: bold; }
+        .actions button { border: none; padding: 5px 10px; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: bold; color: white; transition: 0.2s; }
+        .btn-edit { background: var(--primary); }
+        .btn-delete { background: var(--danger); }
+        .btn-save { background: #4caf50; display: none; }
+        .actions button:hover { opacity: 0.8; }
+        
+        .history-question { font-weight: bold; margin-bottom: 10px; font-size: 1.1em; color: var(--text); }
+        .history-answer { color: #555; white-space: pre-wrap; line-height: 1.5; }
+        
+        textarea.edit-box { width: 100%; min-height: 80px; border-radius: 10px; border: 2px solid var(--primary); padding: 10px; font-family: inherit; font-size: 1em; margin-top: 10px; display: none; box-sizing: border-box; resize: vertical;}
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h2>📜 Past Answers</h2>
+        <a href="/" class="back-btn">⬅ Back to Quiz</a>
+    </div>
+    <div id="historyList">Loading your brilliance...</div>
+</div>
+
+<script>
+    async function loadHistory() {
+        const res = await fetch('/api/answers/history');
+        const data = await res.json();
+        const historyList = document.getElementById('historyList');
+        
+        if (data.length === 0) {
+            historyList.innerHTML = "<p>You haven't answered any questions yet!</p>";
+            return;
+        }
+
+        historyList.innerHTML = data.map(item => {
+            const dateStr = new Date(item.answered_at).toLocaleDateString('en-US', {
+                month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+            });
+            return `
+                <div class="history-item" id="item-${item.answer_id}">
+                    <div class="history-top">
+                        <div class="history-date">🕒 ${dateStr}</div>
+                        <div class="actions">
+                            <button class="btn-edit" onclick="enableEdit(${item.answer_id})">✏️ Edit</button>
+                            <button class="btn-save" id="save-${item.answer_id}" onclick="saveEdit(${item.answer_id})">💾 Save</button>
+                            <button class="btn-delete" onclick="deleteAnswer(${item.answer_id})">🗑️ Delete</button>
+                        </div>
+                    </div>
+                    <div class="history-question">Q: ${item.question_text}</div>
+                    <div class="history-answer" id="answer-text-${item.answer_id}">A: ${item.answer_text}</div>
+                    <textarea class="edit-box" id="edit-box-${item.answer_id}">${item.answer_text}</textarea>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function enableEdit(id) {
+        document.getElementById(`answer-text-${id}`).style.display = 'none';
+        document.getElementById(`edit-box-${id}`).style.display = 'block';
+        document.querySelector(`#item-${id} .btn-edit`).style.display = 'none';
+        document.getElementById(`save-${id}`).style.display = 'inline-block';
+    }
+
+    async function saveEdit(id) {
+        const newText = document.getElementById(`edit-box-${id}`).value;
+        if (!newText.trim()) return alert("Answer cannot be empty!");
+
+        await fetch(`/api/answers/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ answerText: newText })
+        });
+
+        // Update UI without refreshing
+        document.getElementById(`answer-text-${id}`).innerText = `A: ${newText}`;
+        document.getElementById(`answer-text-${id}`).style.display = 'block';
+        document.getElementById(`edit-box-${id}`).style.display = 'none';
+        document.querySelector(`#item-${id} .btn-edit`).style.display = 'inline-block';
+        document.getElementById(`save-${id}`).style.display = 'none';
+    }
+
+    async function deleteAnswer(id) {
+        if (!confirm("Are you sure you want to delete this answer? The question will return to your quiz pool.")) return;
+        
+        await fetch(`/api/answers/${id}`, { method: 'DELETE' });
+        document.getElementById(`item-${id}`).remove();
+        
+        if(document.getElementById('historyList').children.length === 0) {
+            document.getElementById('historyList').innerHTML = "<p>All answers deleted!</p>";
+        }
+    }
+
+    loadHistory();
+</script>
+</body>
+</html>
